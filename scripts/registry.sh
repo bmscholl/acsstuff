@@ -1,3 +1,4 @@
+#!/bin/bash
 set -e
 
 TAG=$1
@@ -5,7 +6,15 @@ if [ ! -n "$TAG" ]; then
   TAG=latest
 fi
 
-rm -rf ~/privatereg && mkdir -p ~/privatereg
+rm -rf ~/acsregistry && mkdir -p ~/acsregistry
+
+echo -n Installing jq...
+LOG=~/acsregistry/jq-install.log
+if [ ! -e /usr/bin/jq ]; then
+  sudo DEBIAN_FRONTEND=noninteractive apt-get install -y jq >> $LOG
+fi
+echo done
+
 echo -n Installing DCOS CLI...
 LOG=~/privatereg/dcos-install.log
 if [ ! -d ~/dcos ]; then
@@ -53,7 +62,7 @@ done
 echo done
 
 echo -n Deploying private Docker registry...
-cat << EOF > ~/privateregistry/registry.json
+cat << EOF > ~/acsregistry/registry.json
 {
     "id": "registry",
     "cpus": 1,
@@ -86,7 +95,7 @@ if [ -n "$($DCOS marathon app list | grep '^/registry')" ]; then
   $DCOS marathon app remove --force registry
   sleep 5
 fi
-$DCOS marathon app add ~/privateregistry/registry.json
+$DCOS marathon app add ~/acsregistry/registry.json
 echo done
 
 echo -n Waiting for private Docker registry
