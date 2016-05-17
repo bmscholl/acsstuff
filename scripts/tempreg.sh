@@ -235,6 +235,24 @@ if [ ! -n "$STORAGE_ACCOUNT_KEY" ]; then
 fi
 end Determined master storage account key
 
+# begin "Adding reference to Docker registry"
+# pushd ~/registry > /dev/null
+# mkdir .docker
+# cat << EOF > .docker/config.json
+# {
+#     "auths": {
+#         "https://index.docker.io/v1/": {
+#             "auth": "cGV0ZXJqbXNmdDphYU9TIW1kYmJldzVwb2E4",
+#             "email": "peterj@microsoft.com"
+#         }
+#     }
+# }
+# EOF
+# run tar -cPzf docker.tar.gz .docker
+# cp docker.tar.gz /var/shared
+# popd > /dev/null
+# end Added reference to Docker registry
+
 begin "Deploying private Docker registry" registry-deploy
 cat << EOF > ~/registry/registry.json
 {
