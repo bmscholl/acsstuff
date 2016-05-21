@@ -204,7 +204,7 @@ if [ ! -e ~/dcos/bin/dcos ]; then
     run sudo ln -s $(dirname $(readlink $(which pip)))/virtualenv $(dirname $(which pip))/virtualenv
   fi
   rm -rf ~/dcos && mkdir -p ~/dcos
-  nab wget --tries 4 --retry-connrefused --waitretry=15 -O- https://downloads.dcos.io/dcos-cli/install-optout.sh \
+  nab wget --tries 4 --retry-connrefused --waitretry=15 -O- https://downloads.dcos.io/dcos-cli/install-optout.sh --no-check-certificate \
     | run /bin/bash -s ~/dcos/. http://leader.mesos --add-path yes
   if [ ! -e ~/dcos/bin/dcos ]; then
     err Failed to install DC/OS CLI
@@ -281,26 +281,5 @@ jval() {
 jvals() {
   python -c "import sys,json;obj=json.load(sys.stdin);[print(elem.get('$2')) for elem in obj.get('$1')]"
 }
-
-beginex "Waiting for cluster readiness"
-DCOS_RESULT=0
-DCOS_SERVICE_COUNT=$((3 + $INTERNAL_LB_COUNT + $EXTERNAL_LB_COUNT))
-while [ $DCOS_RESULT -lt $DCOS_SERVICE_COUNT ]; do
-  inc "polling service health"
-  DCOS_RESULT=$(( \
-    $(nab $DCOS marathon app show registry | jval tasksHealthy) + \
-    ))
-  sleep 1
-done
-REGISTRY_HOST=$(nab $DCOS marathon app show registry | jvals tasks host | sort)
-while true; do
-  inc "polling Mesos DNS server"
-  if [ "$(dig +short registry.marathon.mesos | sort)" != "$REGISTRY_HOST" -a]; then
-    sleep 1
-    continue
-  fi
-  break
-done
-end Cluster was ready
 
 log Cluster initialization completed successfully in $(since $SCRIPT_START)
